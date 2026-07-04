@@ -2,6 +2,79 @@
 
 Este repositório contém a modelagem, simulação de dados e **camada de ingestão/DW** para um e-commerce fictício. O pipeline simula desde o transacional (OLTP) através de uma **Mock API** e base de dados, até a extração, carga (Raw Layer) com **Idempotência**, analytics exploratório e testes automatizados.
 
+## Modelagem de Dados (ER)
+
+O projeto foi construído sobre uma base relacional de E-commerce, garantindo a integridade dos dados através de Chaves Primárias (PK) e Estrangeiras (FK). Abaixo está a arquitetura transacional (OLTP) do modelo:
+
+```mermaid
+erDiagram
+    Cliente ||--o{ Pedidos : "realiza"
+    Cliente ||--o{ Forma_Pagamento : "possui"
+    
+    Pedidos ||--|{ pedido_produto : "contem"
+    Produtos ||--o{ pedido_produto : "presente_em"
+    
+    Fornecedor ||--o{ Produtos : "fornece"
+    Pedidos ||--o| Entrega : "possui"
+
+    Cliente {
+        integer idCliente PK
+        varchar Endereco
+        varchar Tipo_Cliente
+        varchar Nome_Razao_Social
+        varchar CPF
+        varchar CNPJ
+    }
+
+    Pedidos {
+        integer idPedido PK
+        varchar Status_do_Pedido
+        integer idCliente FK
+        varchar Descricao
+        datetime Data_Pedido
+        decimal Valor_Total
+        decimal Frete
+        integer Periodo_Carencia_Devolucao_Dias
+    }
+
+    Produtos {
+        integer idProduto PK
+        varchar Categoria
+        varchar Descricao
+        integer idFornecedor FK
+        decimal Valor
+    }
+
+    Fornecedor {
+        integer idFornecedor PK
+        varchar Razao_Social
+        varchar CNPJ
+    }
+
+    pedido_produto {
+        integer idPedido PK, FK
+        integer idProduto PK, FK
+        integer Quantidade
+        decimal Valor_Unitario
+    }
+
+    Forma_Pagamento {
+        integer idFormaPagamento PK
+        integer idCliente FK
+        varchar Tipo_Pagamento
+        varchar Detalhes
+        boolean Ativo
+    }
+
+    Entrega {
+        integer idEntrega PK
+        integer idPedido FK
+        varchar Status_Entrega
+        varchar Codigo_Rastreio
+        datetime Data_Atualizacao
+    }
+```
+
 ## O que está neste repositório
 
 - `db/ddl/001_schema_inicial.sql`
