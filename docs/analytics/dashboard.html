@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics - Ecommerce Pipeline</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.92);
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --border: rgba(14, 165, 233, 0.18);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-strong: #0ea5e9;
+            --accent-soft: rgba(56, 189, 248, 0.16);
+            --radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.08), transparent 20%),
+                        radial-gradient(circle at 90% 20%, rgba(14, 165, 233, 0.08), transparent 18%),
+                        linear-gradient(180deg, #050816 0%, #020617 100%);
+            color: var(--text-primary);
+            padding: 1.5rem;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .page-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .title-block {
+            max-width: 760px;
+        }
+
+        h1 {
+            font-size: clamp(2.4rem, 3vw, 3.4rem);
+            font-weight: 800;
+            line-height: 1.02;
+            background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.85rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            max-width: 100%;
+            font-size: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.85rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(14, 165, 233, 0.08);
+            color: #bae6fd;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.8rem 1.4rem;
+            overflow: hidden;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 28%);
+            pointer-events: none;
+        }
+
+        .kpi-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+            z-index: 1;
+            position: relative;
+        }
+
+        .kpi-card strong {
+            display: block;
+            font-size: 2.2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.7rem;
+            z-index: 1;
+            position: relative;
+        }
+
+        .kpi-card span {
+            color: var(--accent);
+            font-size: 0.95rem;
+            z-index: 1;
+            position: relative;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .chart-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 360px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+        }
+
+        .chart-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-header h2 {
+            font-size: 0.96rem;
+            color: var(--accent);
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .chart-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .chart-area {
+            flex: 1;
+            min-height: 230px;
+        }
+
+        .chart-note {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .insights {
+            grid-column: span 2;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.8rem;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+        }
+
+        .insights h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .insights ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 0;
+            padding: 0;
+        }
+
+        .insights li {
+            background: rgba(2, 25, 46, 0.75);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            border-radius: 16px;
+            padding: 1.1rem 1rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .insights li strong {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 1040px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .insights {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 760px) {
+            body {
+                padding: 1rem;
+            }
+
+            .page-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrapper {
+                min-height: 300px;
+            }
+
+            .insights ul {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <section class="page-head">
+            <div class="title-block">
+                <h1>Visão 360º | E-commerce</h1>
+                <p class="subtitle">A história por trás de 39 mil pedidos: analise a evolução do faturamento, o giro das principais categorias e o comportamento do perfil PF e PJ.</p>
+            </div>
+            <div class="badge">Inteligência que guia decisões</div>
+        </section>
+
+        <section class="kpi-grid">
+            <article class="kpi-card">
+                <h3>Receita Total</h3>
+                <strong>R$ 737.584.026,90</strong>
+                <span>+8,4% comparado ao ciclo anterior</span>
+            </article>
+            <article class="kpi-card">
+                <h3>Ticket Médio</h3>
+                <strong>R$ 18.442,83</strong>
+                <span>Valor consistente de alto impacto</span>
+            </article>
+            <article class="kpi-card">
+                <h3>Total de Pedidos</h3>
+                <strong>39.993</strong>
+                <span>Demanda estável com espaço para otimização</span>
+            </article>
+        </section>
+
+        <section class="charts-grid">
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h2>Evolução da Receita</h2>
+                    <p>Últimos 25 meses</p>
+                </div>
+                <div class="chart-area"><canvas id="chartReceitaMensal"></canvas></div>
+                <p class="chart-note">Tendência de receita contínua com flutuações sazonais controladas. Picos positivos indicam oportunidades para reforçar campanhas em períodos de alta.</p>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h2>Top Categorias</h2>
+                    <p>Receita por segmento</p>
+                </div>
+                <div class="chart-area"><canvas id="chartTopCat"></canvas></div>
+                <p class="chart-note">Roupas e Livros lideram o faturamento, o que é um sinal claro para priorizar investimentos em marketing e estoque nesses segmentos.</p>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h2>Status de Pedidos</h2>
+                    <p>Distribuição geral</p>
+                </div>
+                <div class="chart-area"><canvas id="chartStatus"></canvas></div>
+                <p class="chart-note">A proporção equilibrada entre entregues, pendentes e cancelados aponta para um fluxo saudável, mas exige atenção ao processo de finalização.</p>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h2>Faturamento por Cliente</h2>
+                    <p>Comparativo PF vs PJ</p>
+                </div>
+                <div class="chart-area"><canvas id="chartPerfil"></canvas></div>
+                <p class="chart-note">A divisão de faturamento entre PF e PJ está quase uniforme, recomendando estratégias comerciais personalizadas para cada grupo.</p>
+            </div>
+
+            <div class="insights">
+                <h2>Principais insights</h2>
+                <ul>
+                    <li><strong>Receita resiliente</strong> - O histórico mensal mostra recuperação e estabilidade, ideal para escalar campanhas com ROI previsível.</li>
+                    <li><strong>Foco em categorias líderes</strong> - Roupas e Livros concentram mais de 26% da receita, tornando-se pilares para promoções sazonais.</li>
+                    <li><strong>Eficiência operacional</strong> - A alta participação de pedidos pendentes sugere otimizações na jornada de checkout e fulfillment.</li>
+                    <li><strong>Perfil diversificado</strong> - PF e PJ geram faturamento próximo, suportando ofertas distintas e segmentadas em diferentes canais.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        Chart.defaults.color = '#cbd5e1';
+        Chart.defaults.font.family = 'Inter';
+
+        // Receita Mensal
+        new Chart(document.getElementById('chartReceitaMensal'), {
+            type: 'line',
+            data: {
+                labels: ["2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"],
+                datasets: [{
+                    label: 'Receita (R$)',
+                    data: [29394580.210000005, 31534569.49999997, 30017205.229999956, 30760283.46999994, 30257145.129999995, 29603828.180000056, 31968304.500000026, 27977838.270000003, 31903966.949999977, 30162330.23999999, 31695025.849999968, 30104321.819999997, 30970534.749999937, 31623773.350000016, 29641023.059999995, 32011084.28, 29563825.080000013, 32639891.230000004, 30336877.870000023, 26582828.889999997, 32398418.06999995, 30826340.639999945, 31338873.07000001, 30499189.639999993, 3771967.620000003],
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { plugins: { title: { display: true, text: 'Evolução da Receita Mensal' } } }
+        });
+
+        // Top Categorias
+        new Chart(document.getElementById('chartTopCat'), {
+            type: 'bar',
+            data: {
+                labels: ["Roupas", "Livros", "M\u00f3veis", "Esportes", "Brinquedos", "Eletr\u00f4nicos", "Beleza", "Alimentos"],
+                datasets: [{
+                    label: 'Receita (R$)',
+                    data: [133092008.9099995, 130151230.81999768, 129790654.30000255, 128691600.46000122, 106777346.43000275, 106267289.82999676, 95045290.18000124, 88568935.75999886],
+                    backgroundColor: '#38bdf8'
+                }]
+            },
+            options: { indexAxis: 'y', plugins: { title: { display: true, text: 'Top Categorias por Receita' } } }
+        });
+
+        // Status do Pedido
+        new Chart(document.getElementById('chartStatus'), {
+            type: 'doughnut',
+            data: {
+                labels: ["ENTREGUE", "PENDENTE", "CANCELADO", "ENVIADO", "PAGO"],
+                datasets: [{
+                    data: [9933, 10089, 10007, 9982, 9989],
+                    backgroundColor: ['#0ea5e9', '#38bdf8', '#7dd3fc', '#0284c7', '#0369a1']
+                }]
+            },
+            options: { plugins: { title: { display: true, text: 'Proporção de Status dos Pedidos' } } }
+        });
+
+        // Perfil do Cliente
+        new Chart(document.getElementById('chartPerfil'), {
+            type: 'pie',
+            data: {
+                labels: ["PJ", "PF"],
+                datasets: [{
+                    data: [372914782.0499997, 364669244.84999996],
+                    backgroundColor: ['#0ea5e9', '#7dd3fc']
+                }]
+            },
+            options: { plugins: { title: { display: true, text: 'Faturamento por Tipo de Cliente (PF/PJ)' } } }
+        });
+    </script>
+</body>
+</html>
