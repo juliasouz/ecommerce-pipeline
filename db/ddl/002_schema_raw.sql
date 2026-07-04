@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS raw_pedidos (
     id_pedido INT UNIQUE NOT NULL, -- Chave natural
     status_do_pedido VARCHAR(50),
     id_cliente INT,
+    id_forma_pagamento INT,
     descricao VARCHAR(255),
     data_pedido TIMESTAMP,
     valor_total NUMERIC(10, 2),

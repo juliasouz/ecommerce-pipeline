@@ -19,15 +19,16 @@ def ingest_pedidos(conn):
     
     upsert_query = """
     INSERT INTO raw_pedidos (
-        id_pedido, status_do_pedido, id_cliente, descricao, data_pedido, 
+        id_pedido, status_do_pedido, id_cliente, id_forma_pagamento, descricao, data_pedido, 
         valor_total, frete, periodo_carencia_devolucao_dias
     ) VALUES (
-        %(id_pedido)s, %(status_do_pedido)s, %(id_cliente)s, %(descricao)s, %(data_pedido)s,
+        %(id_pedido)s, %(status_do_pedido)s, %(id_cliente)s, %(id_forma_pagamento)s, %(descricao)s, %(data_pedido)s,
         %(valor_total)s, %(frete)s, %(periodo_carencia_devolucao_dias)s
     )
     ON CONFLICT (id_pedido) DO UPDATE SET
         status_do_pedido = EXCLUDED.status_do_pedido,
         valor_total = EXCLUDED.valor_total,
+        id_forma_pagamento = EXCLUDED.id_forma_pagamento,
         _loaded_at = CURRENT_TIMESTAMP;
     """
     

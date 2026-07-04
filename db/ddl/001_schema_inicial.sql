@@ -36,10 +36,19 @@ CREATE TABLE produtos (
     CONSTRAINT chk_valor_produto_positivo CHECK (valor > 0)
 );
 
+CREATE TABLE forma_pagamento (
+    id_forma_pagamento SERIAL PRIMARY KEY,
+    id_cliente INTEGER NOT NULL REFERENCES cliente(id_cliente),
+    tipo_pagamento VARCHAR(50) NOT NULL,
+    detalhes VARCHAR(255) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT true
+);
+
 CREATE TABLE pedidos (
     id_pedido SERIAL PRIMARY KEY,
     status_do_pedido VARCHAR(50) NOT NULL,
     id_cliente INTEGER NOT NULL REFERENCES cliente(id_cliente),
+    id_forma_pagamento INTEGER REFERENCES forma_pagamento(id_forma_pagamento),
     descricao VARCHAR(255) NOT NULL,
     data_pedido TIMESTAMP NOT NULL,
     valor_total DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -60,13 +69,7 @@ CREATE TABLE pedido_produto (
     CONSTRAINT chk_valor_unitario_positivo CHECK (valor_unitario >= 0)
 );
 
-CREATE TABLE forma_pagamento (
-    id_forma_pagamento SERIAL PRIMARY KEY,
-    id_cliente INTEGER NOT NULL REFERENCES cliente(id_cliente),
-    tipo_pagamento VARCHAR(50) NOT NULL,
-    detalhes VARCHAR(255) NOT NULL,
-    ativo BOOLEAN NOT NULL DEFAULT true
-);
+
 
 CREATE TABLE entrega (
     id_entrega SERIAL PRIMARY KEY,

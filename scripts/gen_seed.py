@@ -68,18 +68,23 @@ def gerar_dados():
     
     write_csv('produtos.csv', ['id_produto', 'categoria', 'descricao', 'id_fornecedor', 'valor'], produtos)
 
-    # 4. Formas de Pagamento
     formas_pagamento = []
     tipos_pagto = ['Cartão de Crédito', 'Boleto', 'PIX', 'Cartão de Débito']
     id_forma = 1
+    # Dicionário para guardar as formas de pagamento por cliente, para uso nos pedidos
+    formas_por_cliente = {}
+    
     for id_cliente in range(1, NUM_CLIENTES + 1):
+        formas_cliente_atual = []
         # Cada cliente tem 1 a 3 formas de pagamento
         for _ in range(random.randint(1, 3)):
             tipo = random.choice(tipos_pagto)
             detalhes = fake.credit_card_provider() if 'Cartão' in tipo else tipo
             ativo = random.choice(['true', 'false'])
             formas_pagamento.append((id_forma, id_cliente, tipo, detalhes, ativo))
+            formas_cliente_atual.append(id_forma)
             id_forma += 1
+        formas_por_cliente[id_cliente] = formas_cliente_atual
             
     write_csv('forma_pagamento.csv', ['id_forma_pagamento', 'id_cliente', 'tipo_pagamento', 'detalhes', 'ativo'], formas_pagamento)
 
@@ -99,6 +104,9 @@ def gerar_dados():
         frete = round(random.uniform(0.0, 150.0), 2)
         carencia = random.choice([7, 14, 30])
         
+        # Escolhe uma forma de pagamento que pertence a este cliente
+        id_forma_pagamento = random.choice(formas_por_cliente[id_cliente])
+        
         # Itens do pedido
         num_itens = random.randint(1, 5)
         produtos_escolhidos = random.sample(produtos, num_itens)
@@ -113,7 +121,7 @@ def gerar_dados():
             
         valor_total = round(valor_total_itens + frete, 2)
         
-        pedidos.append((i, status, id_cliente, descricao, data_pedido.strftime('%Y-%m-%d %H:%M:%S'), valor_total, frete, carencia))
+        pedidos.append((i, status, id_cliente, id_forma_pagamento, descricao, data_pedido.strftime('%Y-%m-%d %H:%M:%S'), valor_total, frete, carencia))
         
         # Entrega (apenas se não for pendente/cancelado)
         if status in ['ENVIADO', 'ENTREGUE']:
@@ -123,7 +131,7 @@ def gerar_dados():
             entregas.append((id_entrega, i, status_entrega, codigo, data_atualizacao.strftime('%Y-%m-%d %H:%M:%S')))
             id_entrega += 1
 
-    write_csv('pedidos.csv', ['id_pedido', 'status_do_pedido', 'id_cliente', 'descricao', 'data_pedido', 'valor_total', 'frete', 'periodo_carencia_devolucao_dias'], pedidos)
+    write_csv('pedidos.csv', ['id_pedido', 'status_do_pedido', 'id_cliente', 'id_forma_pagamento', 'descricao', 'data_pedido', 'valor_total', 'frete', 'periodo_carencia_devolucao_dias'], pedidos)
     write_csv('pedido_produto.csv', ['id_pedido', 'id_produto', 'quantidade', 'valor_unitario'], pedido_produtos)
     write_csv('entrega.csv', ['id_entrega', 'id_pedido', 'status_entrega', 'codigo_rastreio', 'data_atualizacao'], entregas)
 

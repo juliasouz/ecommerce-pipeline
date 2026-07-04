@@ -12,6 +12,7 @@ erDiagram
     
     Fornecedor ||--o{ Produtos : "fornece"
     Pedidos ||--o| Entrega : "possui"
+    Pedidos }o--|| Forma_Pagamento : "pago_com"
 
     Cliente {
         integer idCliente PK
@@ -26,6 +27,7 @@ erDiagram
         integer idPedido PK
         varchar Status_do_Pedido
         integer idCliente FK
+        integer idFormaPagamento FK
         varchar Descricao
         datetime Data_Pedido
         decimal Valor_Total
