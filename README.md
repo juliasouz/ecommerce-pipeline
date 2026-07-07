@@ -20,7 +20,7 @@ Foi criada, então, a modelagem relacional aplicando conceitos de **Chaves Prim�
 Para simular a realidade respeitando a LGPD, utilizou-se a biblioteca `Faker` no script `gen_seed.py`. 
 Assim, foi gerado instantaneamente **50.000 pedidos** vinculados a milhares de clientes, cartões de crédito e produtos fictícios.
 
-> **O segredo do "Seed":** Foi utilizado `Faker.seed(42)` no código. Ao fixar essa semente matemática, se garante a **reprodutibilidade**. Qualquer pessoa que clonar este repositório vai gerar exatamente os mesmos clientes e CPFs, mantendo o ambiente de testes padronizado.
+> **Utilizando o Seed:** Foi utilizado `Faker.seed(42)` no código. Ao fixar essa semente matemática, se garante a **reprodutibilidade**. Qualquer pessoa que clonar este repositório vai gerar exatamente os mesmos clientes e CPFs, mantendo o ambiente de testes padronizado.
 
 ### 3. APIs e Comunicação Moderna (Mock API)
 Foi construída uma *Mock API* usando o framework **FastAPI** para expor os dados. O FastAPI funciona como um "garçom", servindo os dados de faturamento do E-commerce no formato `JSON` para os nossos scripts ETL. Todo esse fluxo foi testado previamente usando o **Postman** e iterando no código localmente.
