@@ -1,7 +1,5 @@
 # E-commerce Data Pipeline e Analytics
 
-Bem-vindo(a) ao repositório do **E-commerce Data Pipeline**! 
-
 O objetivo deste projeto não é apenas hospedar código, mas sim servir como um **Guia Didático** completo sobre como os dados saem de uma transação web e se transformam em decisões de negócio em um Data Warehouse de nível de produção.
 
 ---
@@ -48,24 +46,24 @@ A organização de pastas foi desenhada seguindo as boas práticas da engenharia
 
 ```text
 📦 ecommerce-pipeline
- ┣ 📂 db                     # Camada de Banco de Dados
- ┃ ┣ 📂 ddl                  # Scripts SQL de criação (Transacional e RAW)
- ┃ ┗ 📂 seed                 # Arquivos CSV gerados para popular o banco inicial
- ┣ 📂 docs                   # Documentação do projeto
- ┃ ┣ 📂 analytics            # Notebooks Jupyter e Dashboards em HTML
- ┃ ┣ 📜 er-modelo.md         # Código fonte Mermaid do Diagrama ER
- ┃ ┗ 📜 er-modelo.png        # Imagem visual e colorida exportada do ER
- ┣ 📂 ingestion              # Scripts ETL
- ┃ ┣ 📜 ingest_api.py        # Ingestão de dados puxando via requisições HTTP REST
- ┃ ┗ 📜 ingest_csv.py        # Ingestão nativa em batch de arquivos via Upsert
- ┣ 📂 mock_api               # API Fake embutida no repo
- ┃ ┗ 📜 main.py              # Aplicação FastAPI servindo JSONs dos csv base
- ┣ 📂 scripts                # Automações da Pipeline
- ┃ ┣ 📜 gen_seed.py          # O motor do Faker para criar 50 mil pedidos robustos
- ┃ ┗ 📜 requirements.txt     # Dependências Python globais do projeto
- ┣ 📂 tests                  # Qualidade e Garantia
- ┃ ┗ 📜 test_ingest.py       # Suite de testes em Pytest atestando a Idempotência
- ┣ 📜 .env.example           # Exemplo de configuração segura de credenciais de BD
+ ┣ 📂 db                   
+ ┃ ┣ 📂 ddl                  
+ ┃ ┗ 📂 seed                
+ ┣ 📂 docs                 
+ ┃ ┣ 📂 analytics         
+ ┃ ┣ 📜 er-modelo.md       
+ ┃ ┗ 📜 er-modelo.png       
+ ┣ 📂 ingestion             
+ ┃ ┣ 📜 ingest_api.py       
+ ┃ ┗ 📜 ingest_csv.py      
+ ┣ 📂 mock_api             
+ ┃ ┗ 📜 main.py           
+ ┣ 📂 scripts          
+ ┃ ┣ 📜 gen_seed.py        
+ ┃ ┗ 📜 requirements.txt   
+ ┣ 📂 tests              
+ ┃ ┗ 📜 test_ingest.py    
+ ┣ 📜 .env.example     
  ┣ 📜 .gitignore             
  ┗ 📜 README.md
 ```
