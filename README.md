@@ -42,7 +42,7 @@ Com os dados seguros no DW, a análise foi realizada utilizando:
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 A organização de pastas foi desenhada seguindo as boas práticas da engenharia de software e pipelines de dados:
 
@@ -72,7 +72,7 @@ A organização de pastas foi desenhada seguindo as boas práticas da engenharia
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Como Executar o Projeto Localmente
 
 Siga o passo a passo abaixo para rodar esse projeto.
 
