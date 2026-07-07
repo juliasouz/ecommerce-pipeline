@@ -11,7 +11,7 @@ O objetivo deste projeto não é apenas hospedar código, mas sim servir como um
 O projeto simula um E-commerce e foi dividido em 5 grandes pilares. Vamos passar por cada um deles para entender o *porquê* das decisões técnicas tomadas.
 
 ### 1. Modelagem Relacional (OLTP)
-Antes do Python entrar em cena, estruturamos uma base de dados transacional (**PostgreSQL**) focada em alta disponibilidade.
+Foi estruturada uma base de dados transacional (**PostgreSQL**) focada em alta disponibilidade.
 Foi criada, então, a modelagem relacional aplicando conceitos de **Chaves Primárias (PK)** e **Chaves Estrangeiras (FK)** para garantir a *Integridade Referencial*. Isso significa que o banco impede anomalias, como um pedido ser pago com um cartão inexistente.
 
 ![Modelo de Entidade Relacionamento](docs/er-modelo.png)
@@ -23,17 +23,17 @@ Assim, foi gerado instantaneamente **50.000 pedidos** vinculados a milhares de c
 > **Utilizando o Seed:** Foi utilizado `Faker.seed(42)` no código. Ao fixar essa semente matemática, se garante a **reprodutibilidade**. Qualquer pessoa que clonar este repositório vai gerar exatamente os mesmos clientes e CPFs, mantendo o ambiente de testes padronizado.
 
 ### 3. APIs e Comunicação Moderna (Mock API)
-Foi construída uma *Mock API* usando o framework **FastAPI** para expor os dados. O FastAPI funciona como um "garçom", servindo os dados de faturamento do E-commerce no formato `JSON` para os nossos scripts ETL. Todo esse fluxo foi testado previamente usando o **Postman** e iterando no código localmente.
+Foi construída uma *Mock API* usando o framework **FastAPI** para expor os dados. O FastAPI funciona como um garçom, servindo os dados de faturamento do E-commerce no formato `JSON` para os scripts ETL. Todo esse fluxo foi testado previamente usando o **Postman** e iterando no código localmente.
 
 ### 4. ETL e Idempotência
-Na hora de trazer os dados da API para o nosso Data Warehouse (na Camada RAW), foram criados scripts em python (`ingest_api.py` e `ingest_csv.py`) com um conceito vital chamado **Idempotência**.
-Imagine que um script falhe na metade ou rode duas vezes. Ele vai duplicar a receita da empresa? Não! Utiliza-se, entçao, a cláusula `UPSERT` (ON CONFLICT DO UPDATE) do banco de dados (que foi gerenciada através do **pgAdmin**):
+Na hora de trazer os dados da API para o Data Warehouse (na Camada RAW), foram criados scripts em python (`ingest_api.py` e `ingest_csv.py`) com um conceito chamado **Idempotência**.
+Imagine que um script falhe na metade ou rode duas vezes. Ele vai duplicar a receita da empresa? Não. Utiliza-se, então, a cláusula `UPSERT` (ON CONFLICT DO UPDATE) do banco de dados (que foi gerenciada através do **pgAdmin**):
 ```sql
 INSERT INTO raw_pedidos (id_pedido, valor_total...)
 VALUES (...)
 ON CONFLICT (id_pedido) DO UPDATE SET valor_total = EXCLUDED.valor_total;
 ```
-Isso garante que o script pode rodar mil vezes e ele apenas atualizará os registros, **nunca duplicando os dados**. Esse fluxo de qualidade foi valiado automatizando testes automatizados com o **Pytest**.
+Isso garante que o script possa rodar mil vezes e ele apenas atualizará os registros, **nunca duplicando os dados**. Esse fluxo foi valiado automatizando testes automatizados com o **Pytest**.
 
 ### 5. Extraindo valor através da análise dos dados
 Com os dados seguros no DW, a análise foi realizada utilizando:
@@ -42,7 +42,7 @@ Com os dados seguros no DW, a análise foi realizada utilizando:
 
 ---
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 A organização de pastas foi desenhada seguindo as boas práticas da engenharia de software e pipelines de dados:
 
@@ -72,7 +72,7 @@ A organização de pastas foi desenhada seguindo as boas práticas da engenharia
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Como Executar o Projeto Localmente
 
 Siga o passo a passo abaixo para rodar esse projeto.
 
@@ -86,7 +86,6 @@ python -m venv .venv
 # Ative no Mac/Linux:
 source .venv/bin/activate
 
-# Instale os pacotes necessários:
 pip install -r scripts/requirements.txt
 ```
 
@@ -101,14 +100,14 @@ psql -U postgres -d ecommerce_db -f db/ddl/001_schema_inicial.sql
 psql -U postgres -d ecommerce_db -f db/ddl/002_schema_raw.sql
 ```
 
-### 3. Simulando a Geração de Dados Reais
-Execute o comando abaixo para acionar a biblioteca Python `Faker`, gerando massas sintéticas perfeitas e dados demográficos para milhares de registros simulados:
+### 3. Simulando a Geração de Dados
+Execute o comando abaixo para acionar a biblioteca Python `Faker`, gerando massas sintéticas e dados demográficos para milhares de registros simulados:
 ```bash
 python scripts/gen_seed.py
 ```
 
 ### 4. Executando a Pipeline de Ingestão (ETL)
-Você tem duas opções disponíveis para trazer os dados da fonte original até o nosso Data Warehouse (Camada Raw).
+Você tem duas opções disponíveis para trazer os dados da fonte original até o Data Warehouse (Camada Raw).
 
 **Opção A: Ingestão de CSV Nativa**
 Para ingestões em bulk com os arquivos gerados:
@@ -116,8 +115,8 @@ Para ingestões em bulk com os arquivos gerados:
 python -m ingestion.ingest_csv
 ```
 
-**Opção B: Ingestão via API (Simulando uma Integração Real de Sistemas)**
-Primeiro, vamos acordar nosso garçom. Suba a Mock API disparando este comando através do terminal:
+**Opção B: Ingestão via API (Simulando uma Integração de Sistemas)**
+Primeiro, vamos acordar o garçom. Suba a Mock API disparando este comando através do terminal:
 ```bash
 uvicorn mock_api.main:app --reload
 ```
@@ -127,7 +126,7 @@ python -m ingestion.ingest_api
 ```
 
 ### 5. Validando a Qualidade e a Segurança
-Como prova real de qualidade e robustez de código, rode a suite automatizada e deixe o Pytest atestar se os dados se mantêm únicos e corretos:
+Como prova real de qualidade do código, rode a suite automatizada e deixe o Pytest atestar se os dados se mantêm únicos e corretos:
 ```bash
 pytest tests/
 ```
