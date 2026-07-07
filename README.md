@@ -1,100 +1,138 @@
-# E-commerce Data Pipeline & Analytics
+# E-commerce Data Pipeline e Analytics
 
-Este repositório contém a modelagem, simulação de dados e **camada de ingestão/DW** para um e-commerce fictício. O pipeline simula desde o transacional (OLTP) através de uma **Mock API** e base de dados, até a extração, carga (Raw Layer) com **Idempotência**, analytics exploratório e testes automatizados.
+Bem-vindo(a) ao repositório do **E-commerce Data Pipeline**! 
 
-## Modelagem de Dados (ER)
-
-O projeto foi construído sobre uma base relacional de E-commerce, garantindo a integridade dos dados através de Chaves Primárias (PK) e Estrangeiras (FK). Abaixo está a arquitetura transacional (OLTP) do modelo:
-
-![Modelo de Entidade Relacionamento](docs/er-modelo.png)
-
-## O que está neste repositório
-
-- `db/ddl/001_schema_inicial.sql`
-  - modelagem relacional do transacional (PK/FK).
-- `db/ddl/002_schema_raw.sql`
-  - tabelas para a camada RAW do Data Warehouse (landing zone).
-- `db/seed/`
-  - arquivos CSV de amostra (Seed) e script de carga (`load_seed.sql`).
-- `mock_api/main.py`
-  - API Rest (FastAPI) servindo dados JSON dos pedidos e clientes para simulação OLTP.
-- `ingestion/`
-  - `ingest_csv.py`: carga nativa batch de arquivos CSV aplicando Idempotência (Upsert).
-  - `ingest_api.py`: carga de dados consumidos da API via requests HTTP (também idempotente).
-- `tests/test_ingest.py`
-  - suite de testes em `pytest` garantindo reexecução sem duplicação de chave natural.
-- `docs/analytics/`
-  - notebook completo exploratório, notebook de ETL e dashboard web em html.
-- `scripts/gen_seed.py`
-  - script gerador base de massas sintéticas com Faker.
+O objetivo deste projeto não é apenas hospedar código, mas sim servir como um **Guia Didático** completo sobre como os dados saem de uma transação web e se transformam em decisões de negócio em um Data Warehouse de nível de produção.
 
 ---
 
-## Como Executar
+## A Arquitetura e as Fases do Projeto
 
-### 1. Instalar dependências
-Certifique-se de usar Python 3.10+:
+O projeto simula um E-commerce e foi dividido em 5 grandes pilares. Vamos passar por cada um deles para entender o *porquê* das decisões técnicas tomadas.
+
+### 1. Modelagem Relacional (OLTP)
+Antes do Python entrar em cena, estruturamos uma base de dados transacional (**PostgreSQL**) focada em alta disponibilidade.
+Foi criada, então, a modelagem relacional aplicando conceitos de **Chaves Primárias (PK)** e **Chaves Estrangeiras (FK)** para garantir a *Integridade Referencial*. Isso significa que o banco impede anomalias, como um pedido ser pago com um cartão inexistente.
+
+![Modelo de Entidade Relacionamento](docs/er-modelo.png)
+
+### 2. Geração de Dados Sintéticos e Faker
+Para simular a realidade respeitando a LGPD, utilizou-se a biblioteca `Faker` no script `gen_seed.py`. 
+Assim, foi gerado instantaneamente **50.000 pedidos** vinculados a milhares de clientes, cartões de crédito e produtos fictícios.
+
+> **O segredo do "Seed":** Foi utilizado `Faker.seed(42)` no código. Ao fixar essa semente matemática, se garante a **reprodutibilidade**. Qualquer pessoa que clonar este repositório vai gerar exatamente os mesmos clientes e CPFs, mantendo o ambiente de testes padronizado.
+
+### 3. APIs e Comunicação Moderna (Mock API)
+Foi construída uma *Mock API* usando o framework **FastAPI** para expor os dados. O FastAPI funciona como um "garçom", servindo os dados de faturamento do E-commerce no formato `JSON` para os nossos scripts ETL. Todo esse fluxo foi testado previamente usando o **Postman** e iterando no código localmente.
+
+### 4. ETL e Idempotência
+Na hora de trazer os dados da API para o nosso Data Warehouse (na Camada RAW), foram criados scripts em python (`ingest_api.py` e `ingest_csv.py`) com um conceito vital chamado **Idempotência**.
+Imagine que um script falhe na metade ou rode duas vezes. Ele vai duplicar a receita da empresa? Não! Utiliza-se, entçao, a cláusula `UPSERT` (ON CONFLICT DO UPDATE) do banco de dados (que foi gerenciada através do **pgAdmin**):
+```sql
+INSERT INTO raw_pedidos (id_pedido, valor_total...)
+VALUES (...)
+ON CONFLICT (id_pedido) DO UPDATE SET valor_total = EXCLUDED.valor_total;
+```
+Isso garante que o script pode rodar mil vezes e ele apenas atualizará os registros, **nunca duplicando os dados**. Esse fluxo de qualidade foi valiado automatizando testes automatizados com o **Pytest**.
+
+### 5. Extraindo valor através da análise dos dados
+Com os dados seguros no DW, a análise foi realizada utilizando:
+- **Pandas**: Usado para limpar, tratar inconsistências, formatar datas e fazer cruzamentos (JOINs) massivos em memória, tudo documentado dentro de Jupyter Notebooks.
+- **Matplotlib & Seaborn**: Usados para traduzir os números em visuais e dashboards descobrindo tendências como a *Evolução da Receita Mensal* e o *Ticket Médio por Categoria*.
+
+---
+
+## 📂 Estrutura do Projeto
+
+A organização de pastas foi desenhada seguindo as boas práticas da engenharia de software e pipelines de dados:
+
+```text
+📦 ecommerce-pipeline
+ ┣ 📂 db                     # Camada de Banco de Dados
+ ┃ ┣ 📂 ddl                  # Scripts SQL de criação (Transacional e RAW)
+ ┃ ┗ 📂 seed                 # Arquivos CSV gerados para popular o banco inicial
+ ┣ 📂 docs                   # Documentação do projeto
+ ┃ ┣ 📂 analytics            # Notebooks Jupyter e Dashboards em HTML
+ ┃ ┣ 📜 er-modelo.md         # Código fonte Mermaid do Diagrama ER
+ ┃ ┗ 📜 er-modelo.png        # Imagem visual e colorida exportada do ER
+ ┣ 📂 ingestion              # Scripts ETL
+ ┃ ┣ 📜 ingest_api.py        # Ingestão de dados puxando via requisições HTTP REST
+ ┃ ┗ 📜 ingest_csv.py        # Ingestão nativa em batch de arquivos via Upsert
+ ┣ 📂 mock_api               # API Fake embutida no repo
+ ┃ ┗ 📜 main.py              # Aplicação FastAPI servindo JSONs dos csv base
+ ┣ 📂 scripts                # Automações da Pipeline
+ ┃ ┣ 📜 gen_seed.py          # O motor do Faker para criar 50 mil pedidos robustos
+ ┃ ┗ 📜 requirements.txt     # Dependências Python globais do projeto
+ ┣ 📂 tests                  # Qualidade e Garantia
+ ┃ ┗ 📜 test_ingest.py       # Suite de testes em Pytest atestando a Idempotência
+ ┣ 📜 .env.example           # Exemplo de configuração segura de credenciais de BD
+ ┣ 📜 .gitignore             
+ ┗ 📜 README.md
+```
+
+---
+
+## 🚀 Como Executar o Projeto Localmente
+
+Siga o passo a passo abaixo para rodar esse projeto.
+
+### 1. Preparando o Ambiente Python
+Certifique-se de usar Python 3.10 ou superior:
 ```bash
 python -m venv .venv
+
+# Ative no Windows:
 .venv\Scripts\activate
+# Ative no Mac/Linux:
+source .venv/bin/activate
+
+# Instale os pacotes necessários:
 pip install -r scripts/requirements.txt
 ```
 
-### 2. Gerar os arquivos sintéticos localmente
-Isso vai gerar os CSVs atualizados dentro de `db/seed/`.
-```bash
-python scripts/gen_seed.py
-```
-
-### 3. Preparar o banco de dados e os Schemas (Transacional e DW)
-1. No seu servidor PostgreSQL, crie o banco vazio: `CREATE DATABASE ecommerce_db;`
-2. No seu terminal de preferência, rode os DDLs:
+### 2. Configurando o Banco de Dados
+O projeto não expõe senhas abertamente (Segurança acima de tudo).
+1. Crie um arquivo oculto chamado `.env` na raiz do projeto, copiando e editando os valores do arquivo de modelo `.env.example`.
+2. No seu servidor local PostgreSQL (utilizando ferramentas como o pgAdmin ou terminal), crie um banco de dados limpo executando:
+   `CREATE DATABASE ecommerce_db;`
+3. Rode os seguintes schemas:
 ```bash
 psql -U postgres -d ecommerce_db -f db/ddl/001_schema_inicial.sql
 psql -U postgres -d ecommerce_db -f db/ddl/002_schema_raw.sql
 ```
 
-### 4. Rodar a Ingestão de Dados via Scripts
-Para popular o Data Warehouse usando lógica Idempotente (ON CONFLICT DO UPDATE):
+### 3. Simulando a Geração de Dados Reais
+Execute o comando abaixo para acionar a biblioteca Python `Faker`, gerando massas sintéticas perfeitas e dados demográficos para milhares de registros simulados:
+```bash
+python scripts/gen_seed.py
+```
+
+### 4. Executando a Pipeline de Ingestão (ETL)
+Você tem duas opções disponíveis para trazer os dados da fonte original até o nosso Data Warehouse (Camada Raw).
+
+**Opção A: Ingestão de CSV Nativa**
+Para ingestões em bulk com os arquivos gerados:
 ```bash
 python -m ingestion.ingest_csv
 ```
 
-### 5. Simular Ingestão via API
-Primeiro suba a API Mock local num terminal:
+**Opção B: Ingestão via API (Simulando uma Integração Real de Sistemas)**
+Primeiro, vamos acordar nosso garçom. Suba a Mock API disparando este comando através do terminal:
 ```bash
 uvicorn mock_api.main:app --reload
 ```
-Em um *outro* terminal, rode a ingestão HTTP:
+Em seguida, deixe esse rodando e em *outro* terminal novinho, dispare a carga HTTP:
 ```bash
 python -m ingestion.ingest_api
 ```
 
-### 6. Rodar Suite de Testes de Qualidade e Idempotência
+### 5. Validando a Qualidade e a Segurança
+Como prova real de qualidade e robustez de código, rode a suite automatizada e deixe o Pytest atestar se os dados se mantêm únicos e corretos:
 ```bash
 pytest tests/
 ```
-Se a suite de testes rodar verde (passed), significa que a idempotência impediu duplicações caso os scripts rodem mais de uma vez.
-
----
-
-## Git e Versionamento
-
-O controle de versão deste repositório foi organizado para ser claro e demonstrar organização de código:
-- **Commits Descritivos**: Os commits indicam claramente a alteração técnica (ex: `feat: cria arquitetura raw e mock api`).
-- **Uso de Branches**: As novas camadas do projeto foram construídas em branches isoladas (ex: `feat/ingestao`) e depois integradas, para não quebrar a linha principal de produção.
 
 ---
 
 ## Conclusão
-
-Este projeto consolida conhecimentos fundamentais de **Engenharia e Análise de Dados** aplicados a um cenário do mundo real.
-
-Assim, foi buscado percorrer o ciclo de vida completo de uma pipeline de dados: começando ao projetar a modelagem relacional de um E-commerce, simulando a geração de dados com segurança (LGPD), consumindo essas informações tanto por CSV quanto por uma API Mock em tempo real, e estruturando um ambiente escalável no banco de dados usando scripts idempotentes e testes automatizados. Por fim, foi extraído valor dessas informações através de métricas de vendas, painéis e análises em Python.
-
-É um reflexo prático de um Data Warehouse funcional, focado na governança de dados e em métricas de negócio.
-
-## Arquitetura de Idempotência
-A camada de ingestão utiliza a chave natural (ex: `id_pedido`, `id_cliente`) através do recurso:
-`ON CONFLICT (chave) DO UPDATE SET...`
-Isso garante que se os scripts de carga rodem acidentalmente várias vezes, eles não irão poluir ou duplicar os dados da camada RAW, atualizando apenas o que for realmente necessário.
+Neste projeto, transitou-se livremente entre bases como Governança, Leis de Privacidade e Modelagem, mecânica via APIs, arquitetura relacional e Upsert e Notebooks para Visualizações Analíticas. 
